@@ -1,13 +1,10 @@
 package com.jml.cloud.control.notas;
 
-
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.math.BigInteger;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
@@ -19,7 +16,10 @@ public class VerNotas extends JFrame {
     private JButton btnConsultar;
     private JTable tblNotas;
 
-    public VerNotas() {
+    private final ConexionBD conexionBD;
+
+    public VerNotas(ConexionBD conexionBD) {
+        this.conexionBD = conexionBD;
         initComponents();
     }
 
@@ -33,49 +33,70 @@ public class VerNotas extends JFrame {
         tblNotas = new JTable();
 
         JPanel panel = new JPanel();
-        panel.add(new JLabel("Identificación:"));
+        Dimension dimension = new Dimension(120, 20);
+        JLabel identificacionLabel = new JLabel("Identificación:");
+
+        panel.add(identificacionLabel);
+        txtIdentificacion.setPreferredSize(dimension);
         panel.add(txtIdentificacion);
         panel.add(btnConsultar);
 
         add(panel, BorderLayout.NORTH);
-        add(new JScrollPane(tblNotas), BorderLayout.CENTER);
+        JScrollPane jScrollPaneTblNotas = new JScrollPane(tblNotas);
+        add(jScrollPaneTblNotas, BorderLayout.CENTER);
 
-        btnConsultar.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                consultarNotas();
-            }
-        });
+        btnConsultar.addActionListener(e -> consultarNotas());
     }
 
     private void consultarNotas() {
         String identificacion = txtIdentificacion.getText();
 
-        if (identificacion.isEmpty()) {
-            JOptionPane.showMessageDialog(null, "Ingrese la identificación del estudiante.");
+        if (identificacion == null || identificacion.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "La identificación no puede estar vacía.");
             return;
         }
 
-        // Obtener las notas del estudiante
-        List<Nota> notas = obtenerNotas(identificacion);
+        // Limpiar la tabla antes de consultar
+        DefaultTableModel modeloVacio = new DefaultTableModel(new String[]{"Identificación", "Materia", "Nota", "Primer Nombre", "Segundo Nombre", "Primer Apellido", "Segundo Apellido", "Tipo Documento", "Corte"}, 0);
+        tblNotas.setModel(modeloVacio);
 
-        // Actualizar la tabla
-        tblNotas.setModel(new DefaultTableModel(
-                (Object[][]) notas.stream().map(nota -> new Object[]{nota.getIdentificacion(), nota.getMateria(), nota.getNota(), nota.getCorte()}).toArray(),
-                new String[]{"Identificación", "Materia", "Nota", "Corte"}
-        ));
+        try {
+            // Obtener las notas del estudiante
+            BigInteger bigInteger = BigInteger.valueOf(Long.parseLong(identificacion));
+            List<Nota> notas = obtenerNotas(bigInteger);
+
+            if (notas.isEmpty()) {
+                JOptionPane.showMessageDialog(null, "No existe registro para la identificación ingresada.");
+                return;
+            }
+
+            // Actualizar la tabla
+            DefaultTableModel modeloTabla = new DefaultTableModel(
+                    new String[]{"Identificación", "Materia", "Nota", "Primer Nombre", "Segundo Nombre", "Primer Apellido", "Segundo Apellido", "Tipo Documento", "Corte"}, 0);
+
+            for (Nota nota : notas) {
+                modeloTabla.addRow(new Object[]{nota.getIdentificacion(), nota.getMateria(), nota.getNota(), nota.getPrimerNombre(), nota.getSegundoNombre(),
+                        nota.getPrimerApellido(), nota.getSegundoApellido(), nota.getTipoDocumento(), nota.getCorte()});
+            }
+
+            tblNotas.setModel(modeloTabla);
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(null, "La identificación debe ser un número válido.");
+        }
     }
 
-    private List<Nota> obtenerNotas(String identificacion) {
+    private List<Nota> obtenerNotas(BigInteger identificacion) {
         // Conectarse a la base de datos
         Connection conexion = null;
         PreparedStatement sentencia = null;
         ResultSet resultado = null;
 
         try {
-            conexion = DriverManager.getConnection("jdbc:mysql://localhost:3306/notas", "root", "");
+            conexion = conexionBD.getConnection();
+
             sentencia = conexion.prepareStatement("SELECT * FROM notas WHERE identificacion = ?");
-            sentencia.setString(1, identificacion);
+            sentencia.setString(1, String.valueOf(identificacion));
+
             resultado = sentencia.executeQuery();
 
             List<Nota> notas = new ArrayList<>();
@@ -83,10 +104,14 @@ public class VerNotas extends JFrame {
             while (resultado.next()) {
                 // Crear una nueva instancia de la clase Nota
                 Nota nota = new Nota(
-                        resultado.getInt("id"),
                         resultado.getString("identificacion"),
                         resultado.getString("materia"),
                         resultado.getDouble("nota"),
+                        resultado.getString("primer_nombre"),
+                        resultado.getString("segundo_nombre"),
+                        resultado.getString("primer_apellido"),
+                        resultado.getString("segundo_apellido"),
+                        resultado.getString("tipo_documento"),
                         resultado.getInt("corte")
                 );
 

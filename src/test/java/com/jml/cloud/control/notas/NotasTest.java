@@ -27,7 +27,7 @@ class NotasTest {
 
         new Login(controladorLogin).setVisible(true);
 //        new Menu().setVisible(true);
-//        new VerNotas().setVisible(true);
+//        new VerNotas(conexionBD).setVisible(true);
 //        new ModificarNotas().setVisible(true);
     }
 }

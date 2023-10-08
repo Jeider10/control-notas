@@ -2,26 +2,26 @@ package com.jml.cloud.control.notas;
 
 public class Nota {
 
-    private int id;
     private String identificacion;
     private String materia;
     private double nota;
+    private String primerNombre;
+    private String segundoNombre;
+    private String primerApellido;
+    private String segundoApellido;
+    private String tipoDocumento;
     private int corte;
 
-    public Nota(int id, String identificacion, String materia, double nota, int corte) {
-        this.id = id;
+    public Nota(String identificacion, String materia, double nota, String primerNombre, String segundoNombre, String primerApellido, String segundoApellido, String tipoDocumento, int corte) {
         this.identificacion = identificacion;
         this.materia = materia;
         this.nota = nota;
+        this.primerNombre = primerNombre;
+        this.segundoNombre = segundoNombre;
+        this.primerApellido = primerApellido;
+        this.segundoApellido = segundoApellido;
+        this.tipoDocumento = tipoDocumento;
         this.corte = corte;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
     }
 
     public String getIdentificacion() {
@@ -46,6 +46,46 @@ public class Nota {
 
     public void setNota(double nota) {
         this.nota = nota;
+    }
+
+    public String getPrimerNombre() {
+        return primerNombre;
+    }
+
+    public void setPrimerNombre(String primerNombre) {
+        this.primerNombre = primerNombre;
+    }
+
+    public String getSegundoNombre() {
+        return segundoNombre;
+    }
+
+    public void setSegundoNombre(String segundoNombre) {
+        this.segundoNombre = segundoNombre;
+    }
+
+    public String getPrimerApellido() {
+        return primerApellido;
+    }
+
+    public void setPrimerApellido(String primerApellido) {
+        this.primerApellido = primerApellido;
+    }
+
+    public String getSegundoApellido() {
+        return segundoApellido;
+    }
+
+    public void setSegundoApellido(String segundoApellido) {
+        this.segundoApellido = segundoApellido;
+    }
+
+    public String getTipoDocumento() {
+        return tipoDocumento;
+    }
+
+    public void setTipoDocumento(String tipoDocumento) {
+        this.tipoDocumento = tipoDocumento;
     }
 
     public int getCorte() {

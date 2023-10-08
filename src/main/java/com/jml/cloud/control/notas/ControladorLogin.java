@@ -32,24 +32,27 @@ public class ControladorLogin {
         String contrasena = login.txtContrasena.getText();
 
         Connection conexion = null;
+        PreparedStatement sentencia = null;
+        ResultSet resultado = null;
+
         try {
             conexion = conexionBD.getConnection();
 
             // Consultar la base de datos para validar el usuario y la contraseña
-            PreparedStatement consulta = conexion.prepareStatement("SELECT * FROM usuarios WHERE usuario = ? AND password = ?");
-            consulta.setString(1, usuario);
-            consulta.setString(2, contrasena);
+            sentencia = conexion.prepareStatement("SELECT * FROM usuarios WHERE usuario = ? AND password = ?");
+            sentencia.setString(1, usuario);
+            sentencia.setString(2, contrasena);
 
-            ResultSet resultado = consulta.executeQuery();
+            resultado = sentencia.executeQuery();
 
             if (resultado.next()) {
                 // El usuario es administrador
-                String tipoUsuario = resultado.getString("tipo_usuario");
+                String tipoUsuario = resultado.getString("rol");
                 if (tipoUsuario.equals("administrador")) {
                     // El usuario es administrador
                     login.txtUsuario.setText("");
                     login.txtContrasena.setText("");
-                    new Menu().setVisible(true);
+                    new Menu(conexionBD).setVisible(true);
                     this.login.dispose();
                 } else {
                     // El usuario no es administrador

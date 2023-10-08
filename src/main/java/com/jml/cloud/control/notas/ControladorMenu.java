@@ -2,14 +2,16 @@ package com.jml.cloud.control.notas;
 
 public class ControladorMenu {
 
-    private Menu menu;
+    private final Menu menu;
+    private final ConexionBD conexionBD;
 
-    public ControladorMenu(Menu menu) {
+    public ControladorMenu(Menu menu, ConexionBD conexionBD) {
         this.menu = menu;
+        this.conexionBD = conexionBD;
     }
 
     public void verNotas() {
-        new VerNotas().setVisible(true);
+        new VerNotas(conexionBD).setVisible(true);
     }
 
     public void modificarNotas() {

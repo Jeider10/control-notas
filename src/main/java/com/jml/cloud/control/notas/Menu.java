@@ -1,15 +1,16 @@
 package com.jml.cloud.control.notas;
 
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class Menu extends JFrame {
 
     private JButton btnVerNotas;
     private JButton btnModificarNotas;
 
-    public Menu() {
+    private final ConexionBD conexionBD;
+
+    public Menu(ConexionBD conexionBD) {
+        this.conexionBD = conexionBD;
         initComponents();
     }
 
@@ -27,18 +28,8 @@ public class Menu extends JFrame {
 
         add(panel);
 
-        btnVerNotas.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                new VerNotas().setVisible(true);
-            }
-        });
+        btnVerNotas.addActionListener(e -> new VerNotas(conexionBD).setVisible(true));
 
-        btnModificarNotas.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                new ModificarNotas().setVisible(true);
-            }
-        });
+        btnModificarNotas.addActionListener(e -> new ModificarNotas().setVisible(true));
     }
 }
