@@ -10,15 +10,18 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class VerNotas extends JFrame {
 
+    private JLabel identificacionLabel;
     private JTextField txtIdentificacion;
     private JButton btnConsultar;
     private JButton btnLimpiar;
     private JButton btnVolverAlMenu;
     private JTable tblNotas;
+    private JScrollPane jScrollPaneTblNotas;
     private JComboBox<String> cmbCorte;
     private String corteSeleccionado;
 
@@ -34,50 +37,70 @@ public class VerNotas extends JFrame {
         setSize(600, 400);
         setLocationRelativeTo(null);
 
+        createComponents();
+        setupListeners();
+    }
+
+    private void createComponents() {
+        createTextFieldsAndButtons();
+        createTableModel();
+        createPanels();
+    }
+
+    private void createTextFieldsAndButtons() {
+        identificacionLabel = new JLabel("Identificación:");
         txtIdentificacion = new JTextField();
         btnConsultar = new JButton("Consultar");
         btnLimpiar = new JButton("Limpiar");
         btnVolverAlMenu = new JButton("Volver");
+    }
 
-        // Crea una tabla vacía inicial
+    private void createTableModel() {
         DefaultTableModel modeloVacio = new DefaultTableModel(
                 new String[]{"Identificación", "Materia", "Nota", "Primer Nombre", "Segundo Nombre", "Primer Apellido", "Segundo Apellido", "Tipo Documento", "Corte"},
                 0
         );
 
         tblNotas = new JTable(modeloVacio);
+    }
 
+    private void createPanels() {
         JPanel panel = new JPanel();
         Dimension dimension = new Dimension(120, 20);
-        JLabel identificacionLabel = new JLabel("Identificación:");
-
-        // Utiliza BorderLayout para el panel superior
         panel.setLayout(new BorderLayout());
 
-        // Agrega la etiqueta, el campo de texto y el botón "Consultar" en el centro del panel
-        JPanel centerPanel = new JPanel();// Agrega el JComboBox para seleccionar el corte
+        JPanel centerPanel = new JPanel();
         String[] cortes = {"Corte I", "Corte II", "Corte III"};
         cmbCorte = new JComboBox<>(cortes);
 
         centerPanel.add(identificacionLabel);
-        txtIdentificacion.setPreferredSize(dimension);
         centerPanel.add(txtIdentificacion);
+        txtIdentificacion.setPreferredSize(dimension);
 
         centerPanel.add(cmbCorte);
         centerPanel.add(btnConsultar);
         centerPanel.add(btnLimpiar);
         centerPanel.add(btnVolverAlMenu);
+
         panel.add(centerPanel, BorderLayout.CENTER);
-
         add(panel, BorderLayout.NORTH);
-        JScrollPane jScrollPaneTblNotas = new JScrollPane(tblNotas);
+        jScrollPaneTblNotas = new JScrollPane(tblNotas);
         add(jScrollPaneTblNotas, BorderLayout.CENTER);
+    }
 
+    private void setupListeners() {
         btnConsultar.addActionListener(e -> consultarNotas());
         btnLimpiar.addActionListener(e -> limpiarPantalla());
         btnVolverAlMenu.addActionListener(e -> volverAlMenu());
 
-        // Agrega un DocumentListener para controlar la habilitación del botón "Limpiar"
+        setupTxtIdentificacionListener();
+        setupCorteListener();
+
+        corteSeleccionado = (String) cmbCorte.getSelectedItem();
+        actualizarEstadoBotonLimpiar();
+    }
+
+    private void setupTxtIdentificacionListener() {
         txtIdentificacion.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent e) {
@@ -94,57 +117,74 @@ public class VerNotas extends JFrame {
                 actualizarEstadoBotonLimpiar();
             }
         });
+    }
 
+    private void setupCorteListener() {
         cmbCorte.addActionListener(e -> {
             corteSeleccionado = (String) cmbCorte.getSelectedItem();
         });
-
-        // Establece un valor predeterminado para corteSeleccionado
-        corteSeleccionado = (String) cmbCorte.getSelectedItem();
-
-        // Establece el estado inicial del botón "Limpiar"
-        actualizarEstadoBotonLimpiar();
     }
 
     private void consultarNotas() {
         String identificacion = txtIdentificacion.getText();
 
         if (identificacion == null || identificacion.isEmpty()) {
-            JOptionPane.showMessageDialog(null, "La identificación no puede estar vacía.");
+            mostrarMensajeError("La identificación no puede estar vacía.");
             return;
         }
 
-        // Obtén el valor numérico del corte seleccionado
         int corteNumerico = mapearCorteSeleccionado(corteSeleccionado);
 
+        limpiarTabla();
 
-        // Limpiar la tabla antes de consultar
-        DefaultTableModel modeloVacio = new DefaultTableModel(new String[]{"Identificación", "Materia", "Nota", "Primer Nombre", "Segundo Nombre", "Primer Apellido", "Segundo Apellido", "Tipo Documento", "Corte"}, 0);
-        tblNotas.setModel(modeloVacio);
+        List<Nota> notas = obtenerNotasParaIdentificacion(identificacion, corteNumerico);
 
-        try {
-            // Obtener las notas del estudiante para el corte seleccionado
-            BigInteger bigInteger = BigInteger.valueOf(Long.parseLong(identificacion));
-            List<Nota> notas = obtenerNotas(bigInteger, corteNumerico);
-
-            if (notas.isEmpty()) {
-                JOptionPane.showMessageDialog(null, "No existen registros para la identificación y corte seleccionados.");
-                return;
-            }
-
-            // Actualizar la tabla
-            DefaultTableModel modeloTabla = new DefaultTableModel(
-                    new String[]{"Identificación", "Materia", "Nota", "Primer Nombre", "Segundo Nombre", "Primer Apellido", "Segundo Apellido", "Tipo Documento", "Corte"}, 0);
-
-            for (Nota nota : notas) {
-                modeloTabla.addRow(new Object[]{nota.getIdentificacion(), nota.getMateria(), nota.getNota(), nota.getPrimerNombre(), nota.getSegundoNombre(),
-                        nota.getPrimerApellido(), nota.getSegundoApellido(), nota.getTipoDocumento(), nota.getCorte()});
-            }
-
-            tblNotas.setModel(modeloTabla);
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(null, "La identificación debe ser un número válido.");
+        if (notas.isEmpty()) {
+            mostrarMensajeInfo("No existen registros para la identificación y corte seleccionados.");
+            return;
         }
+
+        actualizarTabla(notas);
+    }
+
+    private List<Nota> obtenerNotasParaIdentificacion(String identificacion, int corteNumerico) {
+        try {
+            BigInteger bigInteger = obtenerIdentificacionValida(identificacion);
+            return obtenerNotas(bigInteger, corteNumerico);
+        } catch (NumberFormatException e) {
+            mostrarMensajeError("La identificación debe ser un número válido.");
+            return Collections.emptyList();
+        }
+    }
+
+    private void limpiarTabla() {
+        DefaultTableModel modeloVacio = new DefaultTableModel(
+                new String[]{"Identificación", "Materia", "Nota", "Primer Nombre", "Segundo Nombre", "Primer Apellido", "Segundo Apellido", "Tipo Documento", "Corte"}, 0);
+        tblNotas.setModel(modeloVacio);
+    }
+
+    private BigInteger obtenerIdentificacionValida(String identificacion) throws NumberFormatException {
+        return BigInteger.valueOf(Long.parseLong(identificacion));
+    }
+
+    private void actualizarTabla(List<Nota> notas) {
+        DefaultTableModel modeloTabla = new DefaultTableModel(
+                new String[]{"Identificación", "Materia", "Nota", "Primer Nombre", "Segundo Nombre", "Primer Apellido", "Segundo Apellido", "Tipo Documento", "Corte"}, 0);
+
+        for (Nota nota : notas) {
+            modeloTabla.addRow(new Object[]{nota.getIdentificacion(), nota.getMateria(), nota.getNota(), nota.getPrimerNombre(), nota.getSegundoNombre(),
+                    nota.getPrimerApellido(), nota.getSegundoApellido(), nota.getTipoDocumento(), nota.getCorte()});
+        }
+
+        tblNotas.setModel(modeloTabla);
+    }
+
+    private void mostrarMensajeError(String mensaje) {
+        JOptionPane.showMessageDialog(null, mensaje, "Error", JOptionPane.ERROR_MESSAGE);
+    }
+
+    private void mostrarMensajeInfo(String mensaje) {
+        JOptionPane.showMessageDialog(null, mensaje, "Información", JOptionPane.INFORMATION_MESSAGE);
     }
 
     // Modifica este método para incluir el corte como parámetro
