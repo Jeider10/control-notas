@@ -7,7 +7,7 @@ import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class LoginTest {
+class ControladorLoginTest {
 
     private Properties connectionProperties = new Properties();
     private ConexionBD conexionBD = new ConexionBD();
@@ -36,7 +36,7 @@ class LoginTest {
         login.txtContrasena.setText("123");
 
         // Ejecutar el método de validación de inicio de sesión
-        login.validarInicioSesionLogin();
+        controladorLogin.validarInicioSesion();
 
         // Verificar que el usuario sea redirigido al menú
         assertTrue(login.isVisible()); // o alguna otra aserción que confirme que el usuario fue redirigido

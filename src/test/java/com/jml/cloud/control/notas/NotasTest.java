@@ -7,6 +7,7 @@ class NotasTest {
 
     private static ConexionBD conexionBD = new ConexionBD();
     private static Properties connectionProperties = new Properties();
+    private static final ControladorLogin controladorLogin = new ControladorLogin(conexionBD);
 
     public static void main(String[] args) throws SQLException {
         // Configurar el comportamiento esperado de ConexionBD para pruebas
@@ -24,7 +25,7 @@ class NotasTest {
         conexionBD.getConnection();
         System.out.println("Conexion establecida");
 
-        new Login(conexionBD).setVisible(true);
+        new Login(controladorLogin).setVisible(true);
 //        new Menu().setVisible(true);
 //        new VerNotas().setVisible(true);
 //        new ModificarNotas().setVisible(true);
