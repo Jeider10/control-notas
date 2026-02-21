@@ -30,6 +30,7 @@ public class VerNotas extends JFrame {
     public VerNotas(ConexionBD conexionBD) {
         this.conexionBD = conexionBD;
         initComponents();
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 
     private void initComponents() {

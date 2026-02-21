@@ -14,9 +14,9 @@ public class ConexionIT {
     @Test
     public void getConnection_IT() throws SQLException {
 
-        String connectionUrl = "jdbc:mysql://localhost:3307/notas";
+        String connectionUrl = "jdbc:mysql://localhost:3308/fantastic_school_admin_db";
         String user = "root";
-        String password = "1234";
+        String password = "";
 
         connectionProperties.put("connectionUrl", connectionUrl);
         connectionProperties.put("user", user);
